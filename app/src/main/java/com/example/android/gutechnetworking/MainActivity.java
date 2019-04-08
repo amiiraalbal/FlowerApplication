@@ -31,6 +31,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        
+        mMap = new HashMap<>();
 
         progressBar = findViewById(R.id.progressbar);
 
@@ -54,20 +56,11 @@ public class MainActivity extends AppCompatActivity {
             progressBar.setVisibility(View.VISIBLE);
         }
 
+        
         @Override
         protected List<FlowerModel> doInBackground(URL... urls) {
-            List<FlowerModel> flowerModelList = Parser.parseJson(NetManager.fetchData(urls[0]));
-            for (FlowerModel flower: flowerModelList)
-            {
-                URL url = NetManager.getURL(PHOTOS_BASE_URL+flower.getPhoto());
-                try {
-                    InputStream inputStream = (InputStream) new URL(url.toString()).getContent();
-                    Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
-                    flower.setBitmap(bitmap);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
+             flowerModelList = Parser.parseJson(NetManager.fetchData(urls[0]));
+
             return flowerModelList;
         }
 
@@ -117,8 +110,61 @@ public class MainActivity extends AppCompatActivity {
 
             ImageView ivFlowerImage = convertView.findViewById(R.id.ivFlowerImage);
             ivFlowerImage.setImageBitmap(flower.getBitmap());
+            
+            
+            if(mMap.containsKey((flower.getPhoto()))) {
+                ivFlowerImage.setImageBitmap(mMap.get(flower.getPhoto()));
+            }else{
+                DataSender dataSender = new DataSender(ivFlowerImage,flower);
+                new ImageDownloader().execute(dataSender);
+
+            }
 
             return convertView;
+        }
+    }
+    
+    private class ImageDownloader extends AsyncTask<DataSender, Void, Bitmap>
+    {
+        DataSender dataSender;
+
+        @Override
+        protected Bitmap doInBackground(DataSender... dataSenders) {
+            dataSender = dataSenders[0];
+
+
+              URL url = NetManager.getURL(PHOTOS_BASE_URL+dataSender.flower.getPhoto());
+            try
+            {
+              InputStream inputStream = (InputStream) new URL(url.toString()).getContent();
+            return BitmapFactory.decodeStream(inputStream);
+
+
+            }
+            catch (IOException e) {
+             e.printStackTrace();
+            }
+
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Bitmap bitmap) {
+            super.onPostExecute(bitmap);
+            dataSender.ivFlowerName.setImageBitmap(bitmap);
+            mMap.put(dataSender.flower.getPhoto(), bitmap);
+
+        }
+    }
+
+    private class DataSender
+    {
+        ImageView ivFlowerName;
+        FlowerModel flower;
+
+        public DataSender(ImageView imageView, FlowerModel flowerModel) {
+            this.ivFlowerName = imageView;
+            this.flower = flowerModel;
         }
     }
 }
