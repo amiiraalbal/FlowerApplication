@@ -23,6 +23,7 @@ import java.net.URL;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
+    private Map<String, Bitmap> mMap;
     private static final String URL_JSON = "http://services.hanselandpetal.com/feeds/flowers.json";
     private static String PHOTOS_BASE_URL = "http://services.hanselandpetal.com/photos/";
     ProgressBar progressBar;
@@ -59,7 +60,7 @@ public class MainActivity extends AppCompatActivity {
         
         @Override
         protected List<FlowerModel> doInBackground(URL... urls) {
-             flowerModelList = Parser.parseJson(NetManager.fetchData(urls[0]));
+             List<FlowerModel> = flowerModelList = Parser.parseJson(NetManager.fetchData(urls[0]));
 
             return flowerModelList;
         }
